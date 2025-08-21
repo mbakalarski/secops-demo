@@ -1,6 +1,35 @@
 pipeline {
-  agent any 
+  agent {
+    kubernetes {
+      yamlFile 'jenkins-agent.yaml'
+      defaultContainer 'bash'
+      idleMinutes 1
+    }
+  }
+  environment {
+    // HOST1_INSPECT_TARGET = 'ssh://student@34.116.253.244'
+    HOST1 = '34.116.253.244'
+    INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
+  }
 
+  stages {
+    stage('Compliance Run') {
+      steps {
+        container('inspec') {
+            script {
+              withCredentials([sshUserPrivateKey(credentialsId: 'sshUser', keyFileVariable: 'SSH_PRIVATE_KEY', usernameVariable: 'SSH_USERNAME')]) {
+                writeFile file: '/share/ssh-key', text: "${SSH_PRIVATE_KEY}"
+                sh '''
+                  inspec -- inspec exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USERNAME}@${HOST1} -i /share/ssh-key --chef-license=accept
+                '''
+              }
+            }
+        }
+      }
+    }
+  }
+
+  /*
   stages {
     stage('Daily Compliance Run') {
       steps{
@@ -26,5 +55,5 @@ pipeline {
        }
     }
   }
+  */
 }
-
