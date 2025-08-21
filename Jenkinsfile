@@ -20,7 +20,7 @@ pipeline {
               withCredentials([sshUserPrivateKey(credentialsId: 'sshUser', keyFileVariable: 'SSH_PRIVATE_KEY', usernameVariable: 'SSH_USERNAME')]) {
                 writeFile file: '/tmp/ssh-key', text: SSH_PRIVATE_KEY
                 sh '''
-                  inspec -- inspec exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USERNAME}@${HOST1} -i /tmp/ssh-key --chef-license=accept
+                  inspec exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USERNAME}@${HOST1} -i /tmp/ssh-key --chef-license=accept
                 '''
               }
             }
