@@ -17,3 +17,9 @@ spec:
     command:
     - sleep
     - 1d
+  - name: ansible
+    image: alpine/ansible
+    imagePullPolicy: Always
+    command:
+    - sleep
+    - 1d
