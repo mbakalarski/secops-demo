@@ -16,7 +16,7 @@ pipeline {
       }
       steps {
         container('inspec') {
-          withCredentials([sshUserPrivateKey(credentialsId: '${env.CREDENTIAL_ID}', \
+          withCredentials([sshUserPrivateKey(credentialsId: ${env.CREDENTIAL_ID}, \
                                              keyFileVariable: 'SSH_KEY_FOR_HOST', \
                                              usernameVariable: 'SSH_USER_FOR_HOST')]) {
             sh '''
