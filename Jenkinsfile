@@ -22,7 +22,7 @@ pipeline {
       steps {
         container('inspec') {
           withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-ssh-key-for-host1', keyFileVariable: 'SSH_KEY_FOR_HOST1', usernameVariable: 'SSH_USER_FOR_HOST1')]) {
-            ssh '''
+            sh '''
               inspect exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USER_FOR_HOST1}@${HOST1} -i $SSH_KEY_FOR_HOST1 --chef-license=accept
             '''
           }
