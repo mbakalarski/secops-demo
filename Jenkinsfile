@@ -22,9 +22,11 @@ pipeline {
                                              usernameVariable: 'SSH_USER_FOR_HOST')]) {
             sh '''
               inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
+                --chef-license=accept \
                 --target=ssh://${SSH_USER_FOR_HOST}@${HOST} \
-                -i $SSH_KEY_FOR_HOST --chef-license=accept \
-                --waiver-file=./inspec/waiver.yaml
+                -i $SSH_KEY_FOR_HOST \
+                --waiver-file=./inspec/waiver.yaml \
+                --no-distinct-exit
             '''
           }
         }
