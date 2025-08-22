@@ -22,7 +22,7 @@ pipeline {
             sh '''
               ansible-galaxy collection install devsec.hardening && \
               ansible-playbook -i ./ansible/hosts.ini \
-                               --ssh-extra-args StrictHostKeyChecking=no \
+                               --ssh-extra-args '-o StrictHostKeyChecking=no' \
                                -u ${SSH_USER_FOR_HOST} \
                                --private-key ${SSH_KEY_FOR_HOST} \
                                ./ansible/hardening.yaml
