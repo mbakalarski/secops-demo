@@ -6,24 +6,26 @@ pipeline {
       idleMinutes 1
     }
   }
-  environment {
-    // HOST1_INSPECT_TARGET = 'ssh://student@34.116.253.244'
-    HOST1 = '34.116.253.244'
-    INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
-  }
+  // environment {
+  //   // HOST1_INSPECT_TARGET = 'ssh://student@34.116.253.244'
+  //   HOST1 = '34.116.253.244'
+  //   INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
+  // }
 
   stages {
     stage('Compliance Run') {
+      environment {
+        HOST1 = '34.118.72.127'
+        INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
+        // CREDENTIAL_ID = 'jenkins-ssh-key-for-host1'
+      }
       steps {
         container('inspec') {
-            script {
-              withCredentials([sshUserPrivateKey(credentialsId: 'sshUser', keyFileVariable: 'SSH_PRIVATE_KEY', usernameVariable: 'SSH_USERNAME')]) {
-                writeFile file: '/tmp/ssh-key', text: SSH_PRIVATE_KEY
-                sh '''
-                  inspec exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USERNAME}@${HOST1} -i /tmp/ssh-key --chef-license=accept
-                '''
-              }
-            }
+          withCredentials([sshUserPrivateKey(credentialsId: 'jenkins-ssh-key-for-host1', keyFileVariable: 'SSH_KEY_FOR_HOST1', usernameVariable: 'SSH_USER_FOR_HOST1')]) {
+            ssh '''
+              inspect exec ${INSPEC_LINUX_BASE_PROFILE} --target=ssh://${SSH_USER_FOR_HOST1}@${HOST1} -i $SSH_KEY_FOR_HOST1 --chef-license=accept
+            '''
+          }
         }
       }
     }
