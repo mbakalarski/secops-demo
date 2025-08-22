@@ -32,7 +32,7 @@ pipeline {
       }
     }
 
-    stage('Compliance Run') {
+    stage('Compliance Scan') {
       environment {
         INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
       }
