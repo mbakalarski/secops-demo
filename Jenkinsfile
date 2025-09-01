@@ -22,29 +22,29 @@ pipeline {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
                                              keyFileVariable: 'SSH_KEY_FOR_TARGET', \
                                              usernameVariable: 'SSH_USER_FOR_TARGET')]) {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-              sh '''
-                inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
-                  --chef-license=accept \
-                  --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
-                  -i ${SSH_KEY_FOR_TARGET} \
-                  --no-distinct-exit
-              '''
-            }
-            // script {
-            //   def scanResult = sh(script: '''
+            // catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            //   sh '''
             //     inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
             //       --chef-license=accept \
             //       --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
             //       -i ${SSH_KEY_FOR_TARGET} \
             //       --no-distinct-exit
-            //   ''', returnStatus: true
-            //   )
-            //   if (scanResult =! 0) {
-            //     currentBuild.result = 'FAILURE'
-            //     error "Scan before hardening failed!"
-            //   }
+            //   '''
             // }
+            script {
+              def scanResult = sh(script: '''
+                inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
+                  --chef-license=accept \
+                  --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
+                  -i ${SSH_KEY_FOR_TARGET} \
+                  --no-distinct-exit
+              ''', returnStatus: true
+              )
+              if (scanResult =! 0) {
+                currentBuild.result = 'FAILURE'
+                error "Scan before hardening failed!"
+              }
+            }
           }
         }
       }
