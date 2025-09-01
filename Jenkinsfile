@@ -36,6 +36,9 @@ pipeline {
     }
 
     stage('Hardening') {
+      when {
+        expression { currentBuild.result == 'FAILURE'}
+      }
       steps {
         container('ansible') {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
@@ -55,6 +58,9 @@ pipeline {
     }
 
     stage('Compliance Scan') {
+      when {
+        expression { currentBuild.result == 'FAILURE'}
+      }
       environment {
         INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
       }
