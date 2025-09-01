@@ -13,7 +13,7 @@ pipeline {
   }
 
   stages {
-    stage('Compliance Scan before') {
+    stage('Compliance Scan Before Hardening') {
       environment {
         INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
       }
@@ -32,6 +32,17 @@ pipeline {
             '''
           }
         }
+      }
+    }
+
+    stage('Pause/Review') {
+      when {
+        expression { currentBuild.result == 'FAILURE' }
+      }
+      steps {
+        input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
+          string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
+        ]
       }
     }
 
@@ -57,7 +68,7 @@ pipeline {
       }
     }
 
-    stage('Compliance Scan') {
+    stage('Compliance Scan After Hardening') {
       when {
         expression { currentBuild.result == 'FAILURE'}
       }
