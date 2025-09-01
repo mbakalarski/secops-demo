@@ -13,6 +13,28 @@ pipeline {
   }
 
   stages {
+    stage('Compliance Scan') {
+      environment {
+        INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
+      }
+      steps {
+        container('inspec') {
+          withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
+                                             keyFileVariable: 'SSH_KEY_FOR_TARGET', \
+                                             usernameVariable: 'SSH_USER_FOR_TARGET')]) {
+            sh '''
+              inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
+                --chef-license=accept \
+                --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
+                -i ${SSH_KEY_FOR_TARGET} \
+                --waiver-file=./inspec/waiver.yaml \
+                --no-distinct-exit
+            '''
+          }
+        }
+      }
+    }
+
     stage('Hardening') {
       steps {
         container('ansible') {
