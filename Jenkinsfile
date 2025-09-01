@@ -23,45 +23,20 @@ pipeline {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
                                              keyFileVariable: 'SSH_KEY_FOR_TARGET', \
                                              usernameVariable: 'SSH_USER_FOR_TARGET')]) {
-            catchError(buildResult: 'null') {
-              script {
-                def scanResult = sh(script: '''
-                  inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
-                    --chef-license=accept \
-                    --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
-                    -i ${SSH_KEY_FOR_TARGET} \
-                    --no-distinct-exit
-                ''', returnStatus: true)
-                if (scanResult != 0) {
-                  env.SCAN_FAILED = 'true'
-                }
-              }
-              input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
-                string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
-              ]
-            }
+            sh '''
+              inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
+                --chef-license=accept \
+                --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
+                -i ${SSH_KEY_FOR_TARGET} \
+                --waiver-file=./inspec/waiver.yaml \
+                --no-distinct-exit
+            '''
           }
         }
       }
     }
 
-    // stage('Pause/Review') {
-    //   when {
-    //     // expression { currentBuild.result == 'FAILURE' }
-    //     expression { env.SCAN_FAILED == 'true' }
-    //   }
-    //   steps {
-    //     input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
-    //       string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
-    //     ]
-    //   }
-    // }
-
     stage('Hardening') {
-      when {
-        // expression { currentBuild.result == 'FAILURE'}
-        expression { env.SCAN_FAILED == 'true' }
-      }
       steps {
         container('ansible') {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
@@ -81,10 +56,6 @@ pipeline {
     }
 
     stage('Scan After Hardening') {
-      when {
-        // expression { currentBuild.result == 'FAILURE'}
-        expression { env.SCAN_FAILED == 'true' }
-      }
       environment {
         INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
       }
