@@ -10,6 +10,7 @@ pipeline {
   environment {
     TARGET = '34.116.148.25'
     CREDENTIAL_ID = 'jenkins-ssh-key-for-host1'
+    SCAN_FAILED = 'false'
   }
 
   stages {
@@ -22,15 +23,6 @@ pipeline {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
                                              keyFileVariable: 'SSH_KEY_FOR_TARGET', \
                                              usernameVariable: 'SSH_USER_FOR_TARGET')]) {
-            // catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
-            //   sh '''
-            //     inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
-            //       --chef-license=accept \
-            //       --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
-            //       -i ${SSH_KEY_FOR_TARGET} \
-            //       --no-distinct-exit
-            //   '''
-            // }
             script {
               def scanResult = sh(script: '''
                 inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
@@ -38,11 +30,9 @@ pipeline {
                   --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
                   -i ${SSH_KEY_FOR_TARGET} \
                   --no-distinct-exit
-              ''', returnStatus: true
-              )
+              ''', returnStatus: true)
               if (scanResult != 0) {
-                currentBuild.result = 'FAILURE'
-                error "Scan before hardening failed!"
+                env.SCAN_FAILED = 'true'
               }
             }
           }
@@ -52,7 +42,8 @@ pipeline {
 
     stage('Pause/Review') {
       when {
-        expression { currentBuild.result == 'FAILURE' }
+        // expression { currentBuild.result == 'FAILURE' }
+        expression { env.SCAN_FAILED == 'true' }
       }
       steps {
         input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
@@ -63,7 +54,8 @@ pipeline {
 
     stage('Hardening') {
       when {
-        expression { currentBuild.result == 'FAILURE'}
+        // expression { currentBuild.result == 'FAILURE'}
+        expression { env.SCAN_FAILED == 'true' }
       }
       steps {
         container('ansible') {
@@ -85,7 +77,8 @@ pipeline {
 
     stage('Scan After Hardening') {
       when {
-        expression { currentBuild.result == 'FAILURE'}
+        // expression { currentBuild.result == 'FAILURE'}
+        expression { env.SCAN_FAILED == 'true' }
       }
       environment {
         INSPEC_LINUX_BASE_PROFILE = 'https://github.com/dev-sec/linux-baseline'
