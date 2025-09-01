@@ -23,7 +23,7 @@ pipeline {
           withCredentials([sshUserPrivateKey(credentialsId: "${env.CREDENTIAL_ID}", \
                                              keyFileVariable: 'SSH_KEY_FOR_TARGET', \
                                              usernameVariable: 'SSH_USER_FOR_TARGET')]) {
-            catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+            catchError {
               script {
                 def scanResult = sh(script: '''
                   inspec exec ${INSPEC_LINUX_BASE_PROFILE} \
@@ -34,26 +34,28 @@ pipeline {
                 ''', returnStatus: true)
                 if (scanResult != 0) {
                   env.SCAN_FAILED = 'true'
-                  error "Scan failed"
                 }
               }
+              input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
+                string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
+              ]
             }
           }
         }
       }
     }
 
-    stage('Pause/Review') {
-      when {
-        // expression { currentBuild.result == 'FAILURE' }
-        expression { env.SCAN_FAILED == 'true' }
-      }
-      steps {
-        input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
-          string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
-        ]
-      }
-    }
+    // stage('Pause/Review') {
+    //   when {
+    //     // expression { currentBuild.result == 'FAILURE' }
+    //     expression { env.SCAN_FAILED == 'true' }
+    //   }
+    //   steps {
+    //     input message: 'Inspec scan failed. Do you want to continue with Hardening?', ok: 'Proceed', parameters: [
+    //       string(defaultValue: '', description: 'Enter any comments or remediation action taken', name: 'Remediation Comments')
+    //     ]
+    //   }
+    // }
 
     stage('Hardening') {
       when {
