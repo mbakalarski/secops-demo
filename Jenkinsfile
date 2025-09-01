@@ -8,7 +8,7 @@ pipeline {
   }
 
   environment {
-    TARGET = '34.118.72.127'
+    TARGET = '34.116.148.25'
     CREDENTIAL_ID = 'jenkins-ssh-key-for-host1'
   }
 
