@@ -40,7 +40,7 @@ pipeline {
                   --no-distinct-exit
               ''', returnStatus: true
               )
-              if (scanResult =! 0) {
+              if (scanResult != 0) {
                 currentBuild.result = 'FAILURE'
                 error "Scan before hardening failed!"
               }
