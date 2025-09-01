@@ -27,7 +27,6 @@ pipeline {
                 --chef-license=accept \
                 --target=ssh://${SSH_USER_FOR_TARGET}@${TARGET} \
                 -i ${SSH_KEY_FOR_TARGET} \
-                --waiver-file=./inspec/waiver.yaml \
                 --no-distinct-exit
             '''
           }
